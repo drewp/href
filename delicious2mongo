@@ -1,76 +1,71 @@
 #!/usr/bin/env python
-
+# -*- coding: utf-8 -*-
 """
-Python script to copy a delicious XML file into a mongodb.
-Based on this, but updated to use bookmark format:
-https://gist.github.com/raw/744051/2cf68c82b9e320c9e89ff25dfa5093d3996a101b/import_to_mongo.py
-
-sample input:
-
-<DT>
-  <A HREF="http://blog.blprnt.com/blog/blprnt/just-landed-processing-twitter-metacarta-hidden-data"
-  ADD_DATE="1291438624"
-  PRIVATE="0"
-  TAGS="twitter,processing,mapping,for:scotus">Just Landed: Processing, Twitter, MetaCarta &amp; Hidden Data | blprnt.blg</A>
-<DT>
-<A HREF="http://techblog.netflix.com/2010/12/why-we-choose-html5-for-user.html"
-ADD_DATE="1291436802"
-PRIVATE="0"
-TAGS="netflix,html,webapp,for:charliedad">http://techblog.netflix.com/2010/12/why-we-choose-html5-for-user.html</A>
-<DD>&quot;Our PS3 UI was written entirely using HTML5&quot;
-
+Python script to read from delicious.com into mongodb.
 
 Usage:
 
-    python import_to_mongo.py
-
-Requires:
-
-    - pymongo: http://api.mongodb.org/python/
-    - beautifulsoup: http://www.crummy.com/software/BeautifulSoup/
+    python delicious2mongo --mongo localhost --login user:password
 """
 
-import datetime, optparse
+import datetime, optparse, requests
+from requests.auth import HTTPBasicAuth
+
 from dateutil.tz import tzutc
-import lxml.html.soupparser
+from dateutil.parser import parse
 import pymongo
+import lxml.objectify
+
+def addPost(db, user, xmlNode):
+    x = xmlNode
+    out = dict(
+        user=user,
+        description=x.get('description'),
+        extended=x.get('extended'),
+        href=x.get('href'),
+        private=x.get('private') == 'yes',
+        shared=x.get('shared') == 'yes',
+        tag=x.get('tag'),
+        t=parse(x.get('time')),
+        )
+
+    forUsers = []
+    tags = []
+    for t in x.get('tag').split(' '):
+        if t.startswith('for:'):
+            forUsers.append(t[4:])
+        else:
+            tags.append(t)
+    out['extracted'] = dict(tags=tags, forUsers=forUsers)
+    
+    db['links'].update(dict(href=out['href']), out, upsert=True)
 
 parser = optparse.OptionParser()
-parser.add_option("--mongo", help="connect string, like mongodb://user:pass@host:port/db (see http://www.mongodb.org/display/DOCS/Connections)")
-parser.add_option("--bookmarks", help="bookmarks file exported from delicious (see https://secure.delicious.com/settings/bookmarks/export)")
+parser.add_option("--mongo", help="host")
+parser.add_option("--login", help="user:passwd")
 opts, args = parser.parse_args()
 
 if __name__ == '__main__':
     conn = pymongo.Connection(opts.mongo)
-    db = conn.links
+    db = conn['href']
 
-    root = lxml.html.soupparser.fromstring(open(opts.bookmarks).read())
+    offset = 0
+    knownTotal = '?'
+    while True:
+        # https://delicious.com/developers/fetchall
+        print "get [%s/%s]" % (offset, knownTotal)
+        resp = requests.get("https://api.delicious.com/v1/posts/all",
+                            params={'start' : offset},
+                            auth=tuple(opts.login.split(':')))
 
-    for dt in root.findall('dl/dt'):
-        a = dt.find('a')
-        forUsers = []
-        tags = []
-        for t in a.attrib['tags'].split(','):
-            if t.startswith('for:'):
-                forUsers.append(t[4:])
-            else:
-                tags.append(t)
-        nextTag = dt.getnext()
-        note = None
-        if nextTag is not None and nextTag.tag == 'dd':
-            note = nextTag.text
-            if note is not None:
-                note = note.strip()
-        item = {
-            'link' : a.attrib['href'],
-            'addTime' : datetime.datetime.fromtimestamp(
-                int(a.attrib['add_date']), tzutc()),
-            'private' : int(a.attrib['private']),
-            'tags' : tags,
-            'forUsers' : forUsers,
-            'note' : note,
-            }
-        
-        print item 
-    
-    conn.disconnect()
+        posts = lxml.objectify.fromstring(resp.content)
+        user = posts.get('user')
+        knownTotal = posts.get('total') 
+
+        children = posts.getchildren()
+        if not children:
+            break
+        for post in children:
+            addPost(db, user, post)
+
+        offset += len(children)
