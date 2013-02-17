@@ -1,0 +1,40 @@
+doctype html
+html
+  head
+    title {{desc}}
+    {{> head.jade}}
+  body
+    h2 Showing {{desc}}
+
+    | Filter to: 
+    {{#pageTags}}  
+    a.tag(href="{{word}}") {{word}}
+    | 
+    {{/pageTags}}
+    input(type="text", id="filterTag")
+    
+    {{#links}}
+    .link
+      h3
+        span.favicon(style="background-image: url(//www.google.com/s2/favicons?domain={{domain}})")
+        a(href="{{href}}") {{displayDescription}}
+      {{#extended}}
+      .notes
+        | {{extended}}
+      {{/extended}}
+      .tags
+        | Tags:
+        {{#tagWords}}
+        a.tag(href="{{word}}") {{word}}
+        | 
+        {{/tagWords}}
+      .hrefShown
+        a(href="{{href}}") {{href}}
+      .modified
+        | Modified: {{t}}
+        
+    {{/links}}
+
+    p {{stats}}
+    
+    {{> tail.jade}}

@@ -1,0 +1,56 @@
+body {
+    font-family: helvetica;
+    font-size: 12px;
+}
+h3 {
+    margin: 0;
+    margin-bottom: 7px;
+}
+.link {
+    width: 600px;
+    border: 1px solid #D8D8D8;
+    border-radius: 6px;
+    padding: 5px;
+    margin: 10px;
+}
+
+.favicon {
+width: 16px;
+height: 16px;
+display: inline-block;
+    }
+h3 .favicon {
+margin-right: 5px;
+vertical-align: middle;
+    }
+.notes {
+    margin: 5px;
+    color: #2A4E2B;
+}
+.tags {
+    margin-left: 24px;
+    color: black;
+}
+.tag {
+    text-decoration: none;
+    color: black;
+    display: inline-block;
+    border: 1px solid #707070;
+    border-radius: 5px;
+    background: #AAA;
+    padding: 0 8px;
+
+    
+}
+.hrefShown {
+    margin: 4px 0 4px 24px;
+    color: #5E6A6F;
+}
+.hrefShown a {
+    text-decoration: none;
+    color: #027902;
+}
+.modified {
+    margin-left: 24px;
+    color: #5E6A6F;
+}
