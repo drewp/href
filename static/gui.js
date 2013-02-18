@@ -1,4 +1,6 @@
 
+$("#filterTag").focus();
+
 function toggleTag(tag) {
     var p = window.location.pathname;
     var comps = p.split("/");
@@ -48,5 +50,3 @@ $("#filterTag").keydown(function (ev) {
         backspaceLastTag();
     }
 });
-
-$("#filterTag").focus();

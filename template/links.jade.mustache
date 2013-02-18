@@ -6,6 +6,9 @@ html
   body
     h2 Showing {{desc}}
 
+    p
+      a(href="{{toRoot}}/addLink") Add link
+    
     | Filter to: 
     {{#pageTags}}  
     a.tag(href="{{word}}") {{word}}

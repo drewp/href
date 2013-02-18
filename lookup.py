@@ -6,7 +6,7 @@ serve some queries over bookmarks:
 /user/tag+tag+tag
 
 """
-import pymongo, bottle, time, urllib
+import pymongo, bottle, time, urllib, datetime
 from urllib2 import urlparse
 from dateutil.tz import tzlocal
 from bottle import static_file
@@ -42,16 +42,36 @@ def recentTags(user, tags=None):
 
 def renderWithTime(name, data):
     t1 = time.time()
-    rendered = renderer.render_name("links.jade", data)
+    rendered = renderer.render_name(name, data)
     dt = (time.time() - t1) * 1000
     rendered = rendered.replace('TEMPLATETIME', "%.02f ms" % dt)
     return rendered
+
+def getUser():
+    return 'drewpca' # logged in user
+    
+@bottle.route('/addLink')
+def addLink():
+    out = {'toRoot':  '.'}
+    out['user'] = getUser()
+    out['withKnockout'] = True
+    return renderWithTime('add.jade', out)
+
+@bottle.route('/addOverlay')
+def addOverlay():
+    p = bottle.request.params
+
+    return ""
+
+
+    proposal check existing links, get page title (stuff that in db), get tags from us and other serviecs. maybe the deferred ones ater
+
     
 @bottle.route('/<user>/')
 def userSlash(user):
     bottle.redirect("/%s" % urllib.quote(user))
     
-@bottle.route('/<user>')
+@bottle.route('/<user>', method='GET')
 def userAll(user):
     data = recentTags(user, tags=None)
 
@@ -59,6 +79,23 @@ def userAll(user):
     data['toRoot'] = "."
     data['stats']['template'] = 'TEMPLATETIME'
     return renderWithTime('links.jade', data)
+
+@bottle.route('/<user>', method='POST')
+def userAddLink(user):
+    p = bottle.request.params
+    doc = dict(
+        user=user,
+        description=p.description,
+        extended=p.extended,
+        href=p.href,
+        #private=p.private, == checked,
+        #shared ??
+        tag=p.tag,
+        t=datetime.datetime.now(tzlocal()),
+        )
+    db['links'].insert(doc, safe=True)
+        
+    bottle.redirect(user)
     
 @bottle.route('/<user>/<tags>')
 def userLinks(user, tags):

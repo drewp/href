@@ -1,0 +1,51 @@
+doctype html
+html
+  head
+    title add link
+    {{> head.jade}}
+  body
+    h2 add link
+
+    p Bookmarklet to get this form over any page: 
+      a(href="javascript:(function(){
+    var s=document.createElement('div');
+    s.innerHTML='Loading...';
+    s.style.position='fixed';
+    s.style.zIndex='9999';
+    s.style.border='2px solid black';
+    
+    s.style.top='40px';
+    s.style.right='40px';
+    s.style.bottom='40px';
+    s.style.left='40px';
+    s.style.background='white';
+    document.body.appendChild(s);
+
+    s=document.createElement('script');
+    s.setAttribute('type','text/javascript');
+    s.setAttribute('src','http://plus:10002/addOverlay'+
+        '?url='+encodeURIComponent(window.location.href)+
+        '&title='+encodeURIComponent(document.title)+
+        '&selected='+encodeURIComponent(''+(
+            window.getSelection ? window.getSelection(): document.getSelection? document.getSelection(): document.selection.createRange().text))
+        );
+    document.body.appendChild(s);
+})();") addlink
+
+    form(method='post', action='{{toRoot}}/{{user}}')
+      div URI:
+        input(type='text', name='href', data-bind='value: href')
+      div Title:
+        input(type='text', name='description')
+      div Tags:
+        input(type='text', name='tag')
+      div Comment:
+        textarea(name='extended')
+      div Private: ...
+      div Shared: ..?
+      div
+        button(type='submit')
+          | Add
+
+    {{> tail.jade}}
+    script(src="{{toRoot}}/static/add.js")
