@@ -4,6 +4,7 @@ html
     title {{desc}}
     {{> head.jade}}
   body
+    | {{{loginBar}}}
     h2 Showing {{desc}}
 
     p
@@ -28,16 +29,19 @@ html
       .tags
         | Tags:
         {{#tagWords}}
-        a.tag(href="{{word}}") {{word}}
+        a.tag(href="{{toRoot}}/tag/{{word}}", title="add/remove this tag from the current filter") {{word}}
         | 
         {{/tagWords}}
       .hrefShown
         a(href="{{href}}") {{href}}
       .modified
         | Modified: {{t}}
+      .edit
+        a(href="{{toRoot}}/{{editLink}}") Edit
         
     {{/links}}
 
     p {{stats}}
-    
+    script
+      var toRoot = "{{toRoot}}";
     {{> tail.jade}}

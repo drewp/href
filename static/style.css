@@ -54,3 +54,7 @@ vertical-align: middle;
     margin-left: 24px;
     color: #5E6A6F;
 }
+input {
+    width: 500px;
+    padding: 4px;
+}

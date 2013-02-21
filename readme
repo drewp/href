@@ -1,0 +1,25 @@
+Mission:
+
+http://twitter.com/#!/diveintomark/status/15772480610242561
+You know what you should do with your life? Write a del.icio.us clone that no one will use and then die alone.
+
+todo:
+ok openid logins
+- autopaging, like my search UI uses
+- autocomplete tag filter and autocomplete on post-new-link ui
+- add counts to the autocomplete
+- show list of common tags
+- export common tags for use on homepage; match delicious api
+- show narrowing tags and counts when a filter is going
+- 100% ajax page refreshes
+- some boingy graph that looks cool
+- pull tags from delicious and other services at post time
+- sync updates back to a delicious account (and others?)
+- rdf export
+- link edit UI
+- 'send this link to an email addr now' ui, saving the history (so i can sort by most-forwarded, etc)
+- pick up links from twitter
+- maybe pick up links from played podcasts
+- revyu on any link, get review data back so they can be used for sorting
+
+

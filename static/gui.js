@@ -1,32 +1,47 @@
 
 $("#filterTag").focus();
 
-function toggleTag(tag) {
+function currentFilter() {
     var p = window.location.pathname;
     var comps = p.split("/");
-    var selected = (comps[2] || "").split("+");
-    var add = true;
-    var others = [];
-    for (var i=0; i < selected.length; i++) {
-        if (!selected[i]) {
-            continue;
-        }
-        if (selected[i] == tag) {
-            add = false;
-        } else {
-            others.push(selected[i]);
-        }
+    if (toRoot == ".") {
+        return [];
+    } else {
+        return (comps[comps.length-1] || "").split("+");
     }
-    if (add) {
-        others.push(tag);
+}
+
+function toggleTag(tag) {
+    var selected = currentFilter();
+
+    if (selected.indexOf(tag) == -1) {
+        selected.push(tag);
+    } else {
+        selected.splice(selected.indexOf(tag), 1);
     }
-    window.location.pathname = "/" + comps[1] + "/" + others.join("+");
+
+    var newPath = window.location.pathname;
+    if (toRoot == ".") {
+        newPath += "/";
+    } else {
+        newPath = newPath.replace(
+                /(.*\/)[^\/]*$/, "$1")
+    }
+    console.log("user root", newPath);
+    if (selected.length) {
+        newPath += selected.join("+")
+    } else {
+        newPath = newPath.substr(0, newPath.length - 1);
+    }
+    console.log("done", newPath);
+    
+    window.location.pathname = newPath;
 }
 
 function backspaceLastTag() {
     var p = window.location.pathname;
     var comps = p.split("/");
-    var selected = (comps[2] || "").split("+");
+    var selected = (comps[comps.length-1] || "").split("+");
     if (selected.length == 0) {
         return;
     }

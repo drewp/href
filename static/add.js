@@ -1,5 +1,9 @@
 var model = {
-    href: ko.observable("starter"),
+    href: ko.observable(""),
+    description: ko.observable(""),
+    tag: ko.observable(""),
+    extended: ko.observable(""),
+    submitLabel: ko.observable("Add"),
 };
 
 ko.computed(function() {
@@ -7,8 +11,15 @@ ko.computed(function() {
         return;
     }
 
-    $.getJSON("proposal", {uri: model.href()}, function (data) {
+    $.getJSON("addLink/proposedUri", {uri: model.href()}, function (data) {
+        // these could arrive after the user has started typing in the fields!
+        
+        model.description(data.description);
+        model.tag(data.tag);
+        model.extended(data.extended);
 
+        model.submitLabel(data.existed ? "Update existing" : "Add");
+        
     });
     
 });

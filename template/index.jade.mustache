@@ -1,0 +1,17 @@
+doctype html
+html
+  head
+    title href
+    {{> head.jade}}
+  body
+    | {{{loginBar}}}
+    h2 Users
+
+    {{#users}}
+    p
+      a(href="{{user}}") {{user}}
+    {{/users}}
+
+    p {{stats}}
+    
+    {{> tail.jade}}
