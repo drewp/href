@@ -5,6 +5,7 @@ html
     {{> head.jade}}
   body
     | {{{loginBar}}}
+    
     h2 Users
 
     {{#users}}
@@ -12,6 +13,18 @@ html
       a(href="{{user}}") {{user}}
     {{/users}}
 
+    p Compare with
+    ul
+      li
+        a(href='http://www.semanlink.net/sl/home') Semanlink
+      li
+        a(href='http://pinboard.in/') Pinboard
+      li
+        a(href='http://clickb.in/') clickbin
+      li
+        a(href='https://code.google.com/p/gnizr/') gnizer
+        
+    
     p {{stats}}
     
     {{> tail.jade}}
