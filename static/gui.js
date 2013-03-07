@@ -1,6 +1,10 @@
 
 $("#filterTag").focus();
 
+var model = {
+    filterTags: ko.observableArray(currentFilter())
+};
+
 function currentFilter() {
     var p = window.location.pathname;
     var comps = p.split("/");
@@ -19,7 +23,11 @@ function toggleTag(tag) {
     } else {
         selected.splice(selected.indexOf(tag), 1);
     }
+    setPageTags(selected);
+}
 
+function setPageTags(tags) {
+    
     var newPath = window.location.pathname;
     if (toRoot == ".") {
         newPath += "/";
@@ -28,8 +36,8 @@ function toggleTag(tag) {
                 /(.*\/)[^\/]*$/, "$1")
     }
     console.log("user root", newPath);
-    if (selected.length) {
-        newPath += selected.join("+")
+    if (tags.length) {
+        newPath += tags.join("+")
     } else {
         newPath = newPath.substr(0, newPath.length - 1);
     }
@@ -55,8 +63,8 @@ $("a.tag").click(function () {
 });
 
 $("#filterTag").change(function () {
-    var tag = $(this).val();
-    toggleTag(tag);
+    var tags = $(this).val();
+    setPageTags(tags);
     return false;
 });
 
@@ -65,3 +73,11 @@ $("#filterTag").keydown(function (ev) {
         backspaceLastTag();
     }
 });
+
+$("#filterTag").chosen({
+
+    });
+
+ko.applyBindings(model);
+$("#filterTag").trigger("liszt:updated");
+
