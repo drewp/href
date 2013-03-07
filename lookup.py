@@ -9,6 +9,7 @@ and the add-bookmark stuff
 
 """
 import pymongo, bottle, time, urllib, datetime, json, restkit
+from collections import defaultdict
 from urllib2 import urlparse
 from dateutil.tz import tzlocal
 from bottle import static_file
@@ -32,9 +33,9 @@ def getUser():
     username = db['user'].find_one({'_id':agent})['username'] if agent else None
     return username, agent
     
-@bottle.route('/static/<filename>')
-def server_static(filename):
-    return static_file(filename, root='static')
+@bottle.route('/static/<path:path>')
+def server_static(path):
+    return static_file(path, root='static')
 
 def recentTags(user, tags=None):
     out = {'links':[]}
@@ -58,6 +59,15 @@ def recentTags(user, tags=None):
     out['stats'] = {'queryTimeMs' : round((time.time() - t1) * 1000, 2)}
     return out
 
+def allTags(user):
+    count = defaultdict(lambda: 0) # tag : count
+    for doc in db['links'].find({'user':user}, fields=['extracted.tags']):
+        for t in doc.get('extracted', {}).get('tags', []):
+            count[t] = count[t] + 1
+    byFreq = [(n, t) for t,n in count.iteritems()]
+    byFreq.sort(key=lambda (n,t): (-n, t))
+    return [{'label': t, 'count': n} for n, t in byFreq]
+    
 def renderWithTime(name, data):
     t1 = time.time()
     rendered = renderer.render_name(name, data)
@@ -112,13 +122,7 @@ def userSlash(user):
     
 @bottle.route('/<user>', method='GET')
 def userAll(user):
-    data = recentTags(user, tags=None)
-
-    data['loginBar'] = getLoginBar()
-    data['desc'] = "%s's recent links" % user
-    data['toRoot'] = "."
-    data['stats']['template'] = 'TEMPLATETIME'
-    return renderWithTime('links.jade', data)
+    return userLinks(user, "", toRoot=".")
 
 @bottle.route('/<user>', method='POST')
 def userAddLink(user):
@@ -139,12 +143,13 @@ def userAddLink(user):
     bottle.redirect(siteRoot + '/' + user)
     
 @bottle.route('/<user>/<tags>')
-def userLinks(user, tags):
+def userLinks(user, tags, toRoot=".."):
     tags = tags.split('+')
     data = recentTags(user, tags)
     data['loginBar'] = getLoginBar()
-    data['desc'] = "%s's recent links tagged %s"  % (user, tags)
-    data['toRoot'] = ".."
+    data['desc'] = ("%s's recent links" % user) + (" tagged %s"  % (tags,) if tags else "")
+    data['toRoot'] = toRoot
+    data['allTags'] = allTags(user)
 
     data['pageTags'] = [{"word":t} for t in tags]
     data['stats']['template'] = 'TEMPLATETIME'

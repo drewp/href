@@ -49,10 +49,18 @@ html
         input(type='text', name='description', data-bind='value: description')
       div Tags (space-separated):
         input(type='text', name='tag', data-bind='value: tag')
+
       div Comment:
         textarea(name='extended', data-bind='value: extended')
       div Private: ...
       div Shared: ..?
+        | type name to autocomplete from bigfoaf service
+        |    bigfoaf-> people ? q= name_or_email_substr
+        |      -> json list of uri, fullname, email, img
+        | accumulate foaf uris
+        | upon submit, send msgs to c3po who has to buffer them against resends.
+        | bigfoaf display should talk to c3po to learn msgs sent from and to this person.
+        | 
       div
         button(type='submit', data-bind="text: submitLabel")
           Add
