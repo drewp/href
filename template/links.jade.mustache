@@ -11,10 +11,7 @@ html
       a(href="{{toRoot}}/addLink") Add link
     
     | Filter to: 
-    select#filterTag(multiple='multiple', style='width: 300px', data-bind="selectedOptions: filterTags")
-      {{#allTags}}
-      option(value="{{label}}") {{label}} ({{count}})
-      {{/allTags}}
+    input#filterTag(type='hidden', style="width: 300px")
     
     {{#links}}
     .link
@@ -35,6 +32,12 @@ html
         a(href="{{href}}") {{href}}
       .modified
         | Modified: {{t}}
+      .shareWith
+        | Share with:
+        {{#shareWith}}
+        span.person
+          | {{label}}
+        {{/shareWith}}
       .edit
         a(href="{{toRoot}}/{{editLink}}") Edit
         
@@ -42,5 +45,6 @@ html
 
     p {{stats}}
     script
-      var toRoot = "{{toRoot}}";
+      var toRoot = "{{toRoot}}", user = "{{user}}";
     {{> tail.jade}}
+    script(src="{{toRoot}}/static/links.js")

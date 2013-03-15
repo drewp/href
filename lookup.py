@@ -44,25 +44,20 @@ def recentTags(user, tags=None):
     if tags:
         spec['extracted.tags'] = {'$all' : tags}
     for doc in db['links'].find(spec, sort=[('t', -1)], limit=50):
-        del doc['_id']
-        doc['t'] = doc['t'].astimezone(tzlocal()).isoformat()
-        if not doc['description'].strip():
-            doc['displayDescription'] = doc['href']
-        else:
-            doc['displayDescription'] = doc['description']
-
-        doc['tagWords'] = [{'word' : w} for w in doc['tag'].split(None)]
-        doc['domain'] = urlparse.urlparse(doc['href']).netloc
-        doc['editLink'] = 'addLink?' + urllib.urlencode([('url', doc['href'])])
-        
-        out['links'].append(doc)
+        out['links'].append(links.forDisplay(doc))
     out['stats'] = {'queryTimeMs' : round((time.time() - t1) * 1000, 2)}
     return out
 
-def allTags(user):
+def allTags(user, withTags=[]):
+    """withTags limits results to other tags that have been used with
+    those tags"""
+    withTags = set(withTags)
     count = defaultdict(lambda: 0) # tag : count
     for doc in db['links'].find({'user':user}, fields=['extracted.tags']):
-        for t in doc.get('extracted', {}).get('tags', []):
+        docTags = set(doc.get('extracted', {}).get('tags', []))
+        if withTags and not withTags.issubset(docTags):
+            continue
+        for t in docTags.difference(withTags):
             count[t] = count[t] + 1
     byFreq = [(n, t) for t,n in count.iteritems()]
     byFreq.sort(key=lambda (n,t): (-n, t))
@@ -108,13 +103,24 @@ def proposedUri():
         'description': prevDoc['description'] if prevDoc else pageTitle.pageTitle(uri),
         'tag' : prevDoc['tag'] if prevDoc else '',
         'extended' : prevDoc['extended'] if prevDoc else '',
-        'suggestedTags':['tag1', 'tag2'],
-        'existed':prevDoc is not None,
+        'shareWith' : prevDoc.get('shareWith', []) if prevDoc else [],
+        'suggestedTags': ['tag1', 'tag2'],
+        'existed': prevDoc is not None,
         }
 
 if 0:
     pass#proposal check existing links, get page title (stuff that in db), get tags from us and other serviecs. maybe the deferred ones ater
 
+
+@bottle.route('/tags')
+def tagFilterComplete():
+    params = bottle.request.params
+    haveTags = filter(None, params['have'].split(','))
+    return {'tags' : [
+        {'id': t['label'],
+         'text': "%s (%s%s)" % (t['label'], t['count'], " left" if haveTags else "")}
+        for t in allTags(params.user,
+                         withTags=haveTags)]}
     
 @bottle.route('/<user>/')
 def userSlash(user):
@@ -126,35 +132,32 @@ def userAll(user):
 
 @bottle.route('/<user>', method='POST')
 def userAddLink(user):
-    p = bottle.request.params
     if getUser()[0] != user:
         raise ValueError("not logged in as %s" % user)
-    links.insertOrUpdate(dict(
-        user=user,
-        description=p.description,
-        extended=p.extended,
-        href=p.href,
-        #private=p.private, == checked,
-        #shared ??
-        tag=p.tag,
-        t=datetime.datetime.now(tzlocal()),
-        ))
+    print repr(bottle.request.params.__dict__)
+    doc = links.fromPostdata(bottle.request.params,
+                             user,
+                             datetime.datetime.now(tzlocal()))
+    links.insertOrUpdate(doc)
+
+    print "notify about sharing to", repr(doc['shareWith'])
         
     bottle.redirect(siteRoot + '/' + user)
     
 @bottle.route('/<user>/<tags>')
 def userLinks(user, tags, toRoot=".."):
-    tags = tags.split('+')
+    tags = filter(None, tags.split('+'))
     data = recentTags(user, tags)
     data['loginBar'] = getLoginBar()
     data['desc'] = ("%s's recent links" % user) + (" tagged %s"  % (tags,) if tags else "")
     data['toRoot'] = toRoot
     data['allTags'] = allTags(user)
+    data['user'] = user
 
     data['pageTags'] = [{"word":t} for t in tags]
     data['stats']['template'] = 'TEMPLATETIME'
     return renderWithTime('links.jade', data)
-
+    
 @bottle.route('/')
 def root():
     data = {

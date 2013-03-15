@@ -54,7 +54,21 @@ vertical-align: middle;
     margin-left: 24px;
     color: #5E6A6F;
 }
-input {
+.shareWith {
+    margin-left: 24px;
+    color: #5E6A6F;
+}
+.person {
+display: inline-block;
+padding: 2px;
+margin: 0 2px;
+border: 1px solid gray;
+border-radius: 3px;
+    }
+input[type=text] {
     width: 500px;
     padding: 4px;
+}
+#filterTag {
+    width: 300px;
 }
