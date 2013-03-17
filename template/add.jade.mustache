@@ -25,6 +25,10 @@ html
       div Share with (this does not work yet):
         input#shareWith(type='hidden', name='shareWith', style="width: 600px")
 
+      div(style='opacity: .5')
+        | shareWith
+        // ko text: JSON.stringify(shareWith())
+        // /ko
       pre          
         | upon submit, send msgs to c3po who has to buffer them against resends.
         | bigfoaf display should talk to c3po to learn msgs sent from and to this person.

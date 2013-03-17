@@ -30,42 +30,59 @@ ko.computed(function() {
 
 ko.applyBindings(model);
 
-$("#shareWith").select2({
-    tokenSeparators: [",", " "],
-    ajax: {
-        url: "/foaf/findPerson",
-        data: function (term, page) {
-            return {q: term};
+(function (inputElem, model) {
+    inputElem.select2({
+        tokenSeparators: [",", " "],
+        ajax: {
+            url: "/foaf/findPerson",
+            data: function (term, page) {
+                return {q: term};
+            },
+            results: function (data, page) {
+                var ret = {
+                    results: data.people.map(
+                        function (row) {
+                            return {id: row.uri,
+                                    text: row.label + " ("+row.uri+")"};
+                        }),
+                    more: false,
+                    context: {}
+                };
+                //ret.results.push({id: "new1", text: this.context});
+                return ret;
+            }
         },
-        results: function (data, page) {
-            var ret = {results: data.people.map(
-                function (row) {
-                    return {id: row.uri, text: row.label + " ("+row.uri+")"}
-                }),
-                       more: false,
-                       context: {}
-                      };
-            //ret.results.push({id: "new1", text: this.context});
-            return ret;
-        }
-    },
-    tags: [],
-});
-$("#shareWith").on('change', function (e) { setModelFromShares(e.val); });
-
-var setSharesFromModel = ko.computed(
-    function () {
-        var uris = ko.utils.arrayGetDistinctValues(model.linkRecord.shareWith());
-        console.log("from model", uris)
-        $("#shareWith").select2("data", uris.map(
-            function (uri) {
-                return {id: uri, text: "("+uri+")"};
-            }));
+        tags: [],
+    });
+    inputElem.on('change', function (e) {
+        console.log("onchange", inputElem.select2('val'));
+        setModelFromShares(inputElem.select2('val'));
     });
 
-function setModelFromShares(n) {
-    console.log("from val", $("#shareWith").select2("val"), "new", n)
-    model.linkRecord.shareWith($("#shareWith").select2("val"));
-}
+    var enableModel = true;
 
-setSharesFromModel();
+    var setSharesFromModel = ko.computed(
+        function () {
+            var uris = ko.utils.arrayGetDistinctValues(model.linkRecord.shareWith());
+            if (!enableModel) {
+                return;
+            }
+            console.log("from model", uris)
+
+            inputElem.select2("data", uris.map(
+                function (uri) {
+                    return {id: uri, text: "("+uri+")"};
+                }));
+        });
+
+    function setModelFromShares(n) {
+        console.log("from val", inputElem.select2("val"), "new", n)
+        enableModel = false;
+        model.linkRecord.shareWith(inputElem.select2("val"));
+        enableModel = true;
+    }
+    
+    //  setSharesFromModel();
+})($("#shareWith"), model);
+
+
