@@ -43,6 +43,7 @@ def addPost(db, user, xmlNode):
 parser = optparse.OptionParser()
 parser.add_option("--mongo", help="host")
 parser.add_option("--login", help="user:passwd")
+parser.add_option("--hrefuser", help="username in href")
 opts, args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -59,13 +60,12 @@ if __name__ == '__main__':
                             auth=tuple(opts.login.split(':')))
 
         posts = lxml.objectify.fromstring(resp.content)
-        user = posts.get('user')
         knownTotal = posts.get('total') 
 
         children = posts.getchildren()
         if not children:
             break
         for post in children:
-            addPost(db, user, post)
+            addPost(db, opts.hrefuser, post)
 
         offset += len(children)
