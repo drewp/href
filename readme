@@ -3,6 +3,24 @@ Mission:
 http://twitter.com/#!/diveintomark/status/15772480610242561
 You know what you should do with your life? Write a del.icio.us clone that no one will use and then die alone.
 
+Running:
+
+Have make, virtualenv, etc available. Get dependencies:
+```
+% make
+```
+
+Run server in debug mode, which has autoreloading but also just quits sometimes:
+```
+% bin/bottle.py --debug --reload -b 0.0.0.0:10002 lookup
+```
+
+Or run in prod mode:
+```
+% bin/python lookup.py
+```
+
+
 todo:
 ok openid logins
 - autopaging, like my search UI uses
@@ -16,10 +34,8 @@ ok openid logins
 - pull tags from delicious and other services at post time
 - sync updates back to a delicious account (and others?)
 - rdf export
-- link edit UI
+ok link edit UI
 - 'send this link to an email addr now' ui, saving the history (so i can sort by most-forwarded, etc)
 - pick up links from twitter
 - maybe pick up links from played podcasts
 - revyu on any link, get review data back so they can be used for sorting
-
-
