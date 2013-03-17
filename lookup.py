@@ -153,6 +153,7 @@ def userLinks(user, tags, toRoot=".."):
     data['toRoot'] = toRoot
     data['allTags'] = allTags(user)
     data['user'] = user
+    data['showPrivateData'] = (user == getUser()[0])
 
     data['pageTags'] = [{"word":t} for t in tags]
     data['stats']['template'] = 'TEMPLATETIME'

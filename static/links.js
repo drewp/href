@@ -86,9 +86,11 @@ $("#filterTag").select2({
         console.log("ch", ev.val);
     },
     initSelection: function (element, callback) {
-           var data = [];
+        var data = [];
         $(element.val().split(",")).each(function () {
-            data.push({id: this, text: this});
+            if (this != "") {
+                data.push({id: this, text: this});
+            }
         });
         callback(data);
     }

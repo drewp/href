@@ -37,12 +37,14 @@ html
         a(href="{{href}}") {{href}}
       .modified
         | Modified: {{t}}
+      {{#showPrivateData}}
       .shareWith
         | Share with:
         {{#shareWith}}
         span.person
           | {{label}}
         {{/shareWith}}
+      {{/showPrivateData}}
       .edit
         a(href="{{toRoot}}/{{editLink}}") Edit
         
