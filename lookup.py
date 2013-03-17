@@ -95,7 +95,7 @@ def proposedUri():
     user, _ = getUser()
 
     try:
-        prevDoc = links.find(uri)
+        prevDoc = links.find(uri, user)
     except NotFound:
         prevDoc = None
     

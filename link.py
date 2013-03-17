@@ -24,8 +24,8 @@ class Links(object):
                 tags.append(t)
         doc['extracted'] = dict(tags=tags, forUsers=forUsers)
 
-    def find(self, uri):
-        docs = list(self.coll.find({'href': uri}))
+    def find(self, uri, user):
+        docs = list(self.coll.find({'href': uri, 'user' : user}))
         if len(docs) == 0:
             raise NotFound("not found")
         elif len(docs) > 1:
