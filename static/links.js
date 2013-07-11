@@ -50,7 +50,6 @@ function initUrlSync(model) {
     ko.computed(function () {
         var tags = model.filterTags();
         var newPath = window.location.pathname;
-        console.log("currently", newPath, toRoot);
         if (toRoot == ".") {
             newPath += "/";
             toRoot = "..";
@@ -58,7 +57,6 @@ function initUrlSync(model) {
             newPath = newPath.replace(
                     /(.*\/)[^\/]*$/, "$1")
         }
-        console.log("user root", newPath);
         if (tags.length) {
             newPath += tags.join("+")
         } else {
@@ -70,7 +68,6 @@ function initUrlSync(model) {
     });
 
     function changePage(newPath) {
-        console.log("changePage", newPath);
         if (window.location.pathname != newPath) {
             window.history.pushState({}, "", newPath);
 
@@ -116,8 +113,13 @@ function initFilterTag(elem, model) {
         query: function (opts) {
             $.ajax({
                 url: toRoot + "/tags",
-                data: {user: user, have: opts.element.val()},
+                data: {user: user, have: opts.element.val() + "," + opts.term},
                 success: function (data) {
+                    // I don't want to do this, but select2 gets too slow
+                    var maxRowsInAutocomplete = 300;
+                    if (data.tags.length > maxRowsInAutocomplete) { 
+                        data.tags = data.tags.slice(0, maxRowsInAutocomplete);
+                    }
                     opts.callback({results: data.tags});
                 }
             });

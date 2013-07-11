@@ -116,11 +116,21 @@ if 0:
 def tagFilterComplete():
     params = bottle.request.params
     haveTags = filter(None, params['have'].split(','))
-    return {'tags' : [
-        {'id': t['label'],
-         'text': "%s (%s%s)" % (t['label'], t['count'], " left" if haveTags else "")}
-        for t in allTags(params.user,
-                         withTags=haveTags)]}
+    if haveTags and len(haveTags[-1]) > 0:
+        haveTags, partialTerm = haveTags[:-1], haveTags[-1]
+    else:
+        partialTerm = ""
+
+    out = []
+    for t in allTags(params.user, withTags=haveTags):
+        if partialTerm and partialTerm not in t['label']:
+            continue
+        out.append({'id': t['label'],
+         'text': "%s (%s%s)" % (t['label'],
+                                t['count'],
+                                " left" if haveTags else "")})
+    
+    return {'tags' : out}
     
 @bottle.route('/<user>/')
 def userSlash(user):
