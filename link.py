@@ -32,6 +32,9 @@ class Links(object):
             raise ValueError("%s docs found for href %s" % (len(docs), uri))
         else:
             return docs[0]
+
+    def filter(self, user, startTime):
+        return self.coll.find({'user' : user, 't': {'$gte': startTime}})
             
     def forDisplay(self, doc):
         """return a mustache-ready dict for this db doc"""

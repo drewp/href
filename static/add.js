@@ -69,10 +69,24 @@ ko.applyBindings(model);
             }
             console.log("from model", uris)
 
-            inputElem.select2("data", uris.map(
-                function (uri) {
-                    return {id: uri, text: "("+uri+")"};
-                }));
+            async.map(uris,
+                      function (uri, cb) {
+                          $.ajax({
+                              url: uri.replace(/^http:/, "https:"),
+                              dataType: "text",
+                              success: function (page) {
+                                  pp = page
+                                  d = $(page).rdfa().databank;
+                                  console.log("from", uri, "extracted", d.size(), "triples");
+                                  "trying to get the rdfa out of this page to attempt prettier label/icon for the listed person"
+                                  console.log(JSON.stringify(d.dump()));
+                              }
+                          });
+                          cb(null, {id: uri, text: "("+uri+")"});
+                      },
+                      function (err, selections) {
+                          inputElem.select2("data", selections);
+                      });
         });
 
     function setModelFromShares(n) {

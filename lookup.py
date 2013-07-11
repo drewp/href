@@ -37,7 +37,7 @@ def getUser():
 def server_static(path):
     return static_file(path, root='static')
 
-def recentTags(user, tags=None):
+def recentLinks(user, tags=None):
     out = {'links':[]}
     t1 = time.time()
     spec = {'user':user}
@@ -125,11 +125,18 @@ def tagFilterComplete():
 @bottle.route('/<user>/')
 def userSlash(user):
     bottle.redirect("/%s" % urllib.quote(user))
+
+@bottle.route('/<user>.json', method='GET')
+def userAllJson(user):
+    data = recentLinks(user, [])
+    data['toRoot'] = "."
+    return json.dumps(data)
     
 @bottle.route('/<user>', method='GET')
 def userAll(user):
     return userLinks(user, "", toRoot=".")
-
+    
+   
 @bottle.route('/<user>', method='POST')
 def userAddLink(user):
     if getUser()[0] != user:
@@ -143,11 +150,23 @@ def userAddLink(user):
     print "notify about sharing to", repr(doc['shareWith'])
         
     bottle.redirect(siteRoot + '/' + user)
+
+def parseTags(tagComponent):
+    # the %20 is coming from davis.js, not me :(
+    return filter(None, tagComponent.replace("%20", "+").split('+'))
+    
+@bottle.route('/<user>/<tags:re:.*>.json')
+def userLinksJson(user, tags):
+    tags = parseTags(tags)
+    data = recentLinks(user, tags)
+    data['toRoot'] = ".."
+    return json.dumps(data)
+
     
 @bottle.route('/<user>/<tags>')
 def userLinks(user, tags, toRoot=".."):
-    tags = filter(None, tags.split('+'))
-    data = recentTags(user, tags)
+    tags = parseTags(tags)
+    data = recentLinks(user, tags)
     data['loginBar'] = getLoginBar()
     data['desc'] = ("%s's recent links" % user) + (" tagged %s"  % (tags,) if tags else "")
     data['toRoot'] = toRoot
@@ -158,6 +177,10 @@ def userLinks(user, tags, toRoot=".."):
     data['pageTags'] = [{"word":t} for t in tags]
     data['stats']['template'] = 'TEMPLATETIME'
     return renderWithTime('links.jade', data)
+
+@bottle.route('/templates')
+def templates():
+    return json.dumps({'linklist': renderer.load_template("linklist.jade")})
     
 @bottle.route('/')
 def root():
