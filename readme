@@ -39,3 +39,4 @@ ok link edit UI
 - pick up links from twitter
 - maybe pick up links from played podcasts
 - revyu on any link, get review data back so they can be used for sorting
+- http proxy mode that can scrape all the pages you visit, perhaps between some start/end requests where you pick tags to apply to all the pages. This is for research mode. May involve multiple people on a team.

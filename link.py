@@ -65,3 +65,12 @@ class Links(object):
             tag=data.tag,
             t=t,
         )
+
+    def asDeliciousAddParams(self):
+        return dict(url=self['href'],
+                    description=self['description'],
+                    extended=self['extended'],
+                    tags=','.join(self['tag'].split(' ')),
+                    dt=self['t'],
+                    replace='yes',
+        )
