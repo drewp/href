@@ -25,7 +25,9 @@
       | {{label}}
     {{/shareWith}}
   {{/showPrivateData}}
+  {{#allowEdit}}
   .edit
-    a(href="{{toRoot}}/{{editLink}}") Edit
+      a(href="{{toRoot}}/{{editLink}}") Edit
+  {{/allowEdit}}
     
 {{/links}}

@@ -8,7 +8,7 @@ serve some queries over bookmarks:
 and the add-bookmark stuff
 
 """
-import pymongo, bottle, time, urllib, datetime, json, restkit
+import pymongo, bottle, time, urllib, datetime, json, restkit, logging
 from collections import defaultdict
 from urllib2 import urlparse
 from dateutil.tz import tzlocal
@@ -20,31 +20,44 @@ db = pymongo.Connection('bang', tz_aware=True)['href']
 pageTitle = PageTitle(db)
 links = Links(db)
 renderer = Renderer(search_dirs=['template'], debug=bottle.DEBUG)
+log = logging.getLogger()
 
 siteRoot = 'https://bigasterisk.com/href'
 
 def getLoginBar():
     openidProxy = restkit.Resource("http://bang:9023/")
     return openidProxy.get("_loginBar",
-                 headers={"Cookie" : bottle.request.headers.get('cookie')}).body_string()
+                           headers={
+                               "Cookie" : bottle.request.headers.get('cookie'),
+                               'x-site': 'http://bigasterisk.com/openidProxySite/href',
+                           }).body_string()
 
 def getUser():
     agent = bottle.request.headers.get('x-foaf-agent', None)
     username = db['user'].find_one({'_id':agent})['username'] if agent else None
     return username, agent
+
+def siteRoot():
+    try:
+        return bottle.request.headers['x-site-root'].rstrip('/')
+    except KeyError:
+        log.warn(repr(bottle.request.__dict__))
+        raise
     
 @bottle.route('/static/<path:path>')
 def server_static(path):
     return static_file(path, root='static')
 
-def recentLinks(user, tags=None):
+def recentLinks(user, tags, allowEdit):
     out = {'links':[]}
     t1 = time.time()
     spec = {'user':user}
     if tags:
         spec['extracted.tags'] = {'$all' : tags}
     for doc in db['links'].find(spec, sort=[('t', -1)], limit=50):
-        out['links'].append(links.forDisplay(doc))
+        link = links.forDisplay(doc)
+        link['allowEdit'] = allowEdit
+        out['links'].append(link)
     out['stats'] = {'queryTimeMs' : round((time.time() - t1) * 1000, 2)}
     return out
 
@@ -73,7 +86,7 @@ def renderWithTime(name, data):
 @bottle.route('/addLink')
 def addLink():
     out = {
-        'toRoot':  '.',
+        'toRoot': siteRoot(),
         'absRoot': siteRoot,
         'user': getUser()[0],
         'withKnockout':  True,
@@ -134,17 +147,17 @@ def tagFilterComplete():
     
 @bottle.route('/<user>/')
 def userSlash(user):
-    bottle.redirect("/%s" % urllib.quote(user))
+    bottle.redirect(siteRoot() + "/%s" % urllib.quote(user))
 
 @bottle.route('/<user>.json', method='GET')
 def userAllJson(user):
-    data = recentLinks(user, [])
-    data['toRoot'] = "."
+    data = recentLinks(user, [], allowEdit=getUser()[0] == user)
+    data['toRoot'] = siteRoot()
     return json.dumps(data)
     
 @bottle.route('/<user>', method='GET')
 def userAll(user):
-    return userLinks(user, "", toRoot=".")
+    return userLinks(user, "")
     
    
 @bottle.route('/<user>', method='POST')
@@ -168,18 +181,19 @@ def parseTags(tagComponent):
 @bottle.route('/<user>/<tags:re:.*>.json')
 def userLinksJson(user, tags):
     tags = parseTags(tags)
-    data = recentLinks(user, tags)
-    data['toRoot'] = ".."
+    data = recentLinks(user, tags, allowEdit=getUser()[0] == user)
+    data['toRoot'] = siteRoot()
     return json.dumps(data)
 
     
 @bottle.route('/<user>/<tags>')
-def userLinks(user, tags, toRoot=".."):
+def userLinks(user, tags):
     tags = parseTags(tags)
-    data = recentLinks(user, tags)
+    log.info('userLinks user=%r tags=%r', user, tags)
+    data = recentLinks(user, tags, allowEdit=getUser()[0] == user)
     data['loginBar'] = getLoginBar()
     data['desc'] = ("%s's recent links" % user) + (" tagged %s"  % (tags,) if tags else "")
-    data['toRoot'] = toRoot
+    data['toRoot'] = siteRoot()
     data['allTags'] = allTags(user)
     data['user'] = user
     data['showPrivateData'] = (user == getUser()[0])
@@ -196,11 +210,12 @@ def templates():
 def root():
     data = {
         'loginBar': getLoginBar(),
-        'toRoot': ".",
+        'toRoot': siteRoot(),
         'stats': {'template': 'TEMPLATETIME'},
         'users': [{'user':doc['username']} for doc in db['user'].find()],
         }
     return renderWithTime('index.jade', data)
     
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
     bottle.run(server='gunicorn', host='0.0.0.0', port=10002, workers=4)

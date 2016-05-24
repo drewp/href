@@ -4,14 +4,19 @@ var model = {
     filterTags: ko.observableArray(tagsFromWindowLocation())
 };
 
+function componentsAfterRoot() {
+    var p = window.location.href;
+    return comps = p.substr(toRoot.length + 1).split("/");
+}
+
 function tagsFromWindowLocation() {
-    var p = window.location.pathname;
-    var comps = p.split("/");
-    if (toRoot == ".") {
+    var comps = componentsAfterRoot();
+    comps.shift();
+    if (!comps.length) {
         return [];
-    } else {
-        return (comps[comps.length-1] || "").replace("%20", "+").split("+");
     }
+    var tags = comps[0].replace("%20", "+").split("+");
+    return tags.filter(function(t) { return t != ""; });
 }
 
 function toggleTag(tag) {
@@ -40,36 +45,31 @@ function initSpecialLinkBehavior() {
             
 var linklist = null;
 // unsure how to use toRoot- can it change?
-$.getJSON("/href/templates", function (result) {
+$.getJSON(toRoot + "/templates", function (result) {
     linklist = result.linklist;
 });
+
+function pathFromUserAndTags(tags) {
+    var comps = componentsAfterRoot();
+    var newPath = comps[0];
+    if (tags.length) {
+        newPath += '/' + tags.join('+');
+    }
+    return newPath;
+}
 
 function initUrlSync(model) {
     // tag changes push url history; and url edits freshen the page
 
     ko.computed(function () {
         var tags = model.filterTags();
-        var newPath = window.location.pathname;
-        if (toRoot == ".") {
-            newPath += "/";
-            toRoot = "..";
-        } else {
-            newPath = newPath.replace(
-                    /(.*\/)[^\/]*$/, "$1")
-        }
-        if (tags.length) {
-            newPath += tags.join("+")
-        } else {
-            newPath = newPath.substr(0, newPath.length - 1);
-            toRoot = ".";
-        }
-        
+        var newPath = pathFromUserAndTags(tags);
         changePage(newPath);
     });
 
     function changePage(newPath) {
-        if (window.location.pathname != newPath) {
-            window.history.pushState({}, "", newPath);
+        if (componentsAfterRoot().join('/') != newPath) {
+            window.history.pushState({}, "", toRoot + '/' + newPath);
 
             function updateLinklist(fullPath) {
                 var t0 = +new Date();
@@ -78,7 +78,7 @@ function initUrlSync(model) {
                     return;
                 }
                 $(".linklist").text("Loading...");
-                $.getJSON(fullPath + ".json", function (result) {
+                $.getJSON(toRoot + '/' + fullPath + ".json", function (result) {
                     var t1 = +new Date();
                     var rendered = Mustache.render(linklist, result)
                     var t2 = +new Date();
@@ -101,7 +101,7 @@ function initFilterTag(elem, model) {
     
     elem.change(function () {
         var tags = $(this).val().split(",");
-        model.filterTags(tags);
+        model.filterTags(tags.filter(function(t) { return t != ""; }));
         return false;
     });
 
