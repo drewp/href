@@ -22,8 +22,6 @@ links = Links(db)
 renderer = Renderer(search_dirs=['template'], debug=bottle.DEBUG)
 log = logging.getLogger()
 
-siteRoot = 'https://bigasterisk.com/href'
-
 def getLoginBar():
     openidProxy = restkit.Resource("http://bang:9023/")
     return openidProxy.get("_loginBar",
@@ -87,7 +85,7 @@ def renderWithTime(name, data):
 def addLink():
     out = {
         'toRoot': siteRoot(),
-        'absRoot': siteRoot,
+        'absRoot': siteRoot(),
         'user': getUser()[0],
         'withKnockout':  True,
         'fillHrefJson':  json.dumps(bottle.request.params.get('url', '')),
@@ -172,7 +170,7 @@ def userAddLink(user):
 
     print "notify about sharing to", repr(doc['shareWith'])
         
-    bottle.redirect(siteRoot + '/' + user)
+    bottle.redirect(siteRoot() + '/' + user)
 
 def parseTags(tagComponent):
     # the %20 is coming from davis.js, not me :(
