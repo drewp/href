@@ -14,10 +14,10 @@ class PageTitle(object):
     def getPageTitleNow(self, uri):
         try:
             response = requests.get(uri, timeout=1, allow_redirects=True,
-                                headers={
-                                    'user-agent':
-                                    'link title checker - drewp@bigasterisk.com'
-                                })
+                                    headers={
+                                        'user-agent':
+                                        'link title checker - drewp@bigasterisk.com'
+                                    })
             if not str(response.status_code).startswith('2'):
                 raise CantGetTitle("(got %s)" % response.status_code)
             root = lxml.html.soupparser.fromstring(
