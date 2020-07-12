@@ -19,7 +19,7 @@ class _JadeLoader(pystache.loader.Loader):
         if encoding is None:
             encoding = self.file_encoding
 
-        src = self.unicode(b, encoding)
+        src = self.str(b, encoding)
 
         expanded = pyjade.utils.process(src)
         self.seen[path] = expanded
@@ -45,7 +45,7 @@ class Renderer(pystache.renderer.Renderer):
     def _new_loader(self):
         return _JadeLoader(
                 file_encoding=self.file_encoding, extension=self.file_extension,
-                to_unicode=self.unicode, search_dirs=self.search_dirs)
+                to_unicode=self.str, search_dirs=self.search_dirs)
         
     def _make_loader(self):
         if self._loader is not None:

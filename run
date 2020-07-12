@@ -1,2 +1,3 @@
 #!/bin/sh
-exec bin/python lookup.py
+echo "nameserver 10.43.0.10" > /etc/resolv.conf
+exec python3 lookup.py

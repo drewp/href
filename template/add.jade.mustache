@@ -42,8 +42,8 @@ html
     {{> bookmarklets.jade}}
           
     script
-      var toRoot = "{{toRoot}}", user = "{{user}}";
+      | var toRoot = "{{toRoot}}", user = "{{user}}";
     {{> tail.jade}}
     script(src="{{toRoot}}/static/add.js")
     script
-      model.linkRecord.href({{{fillHrefJson}}})
+      | model.linkRecord.href({{{fillHrefJson}}})

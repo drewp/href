@@ -1,4 +1,4 @@
-import urlparse, urllib
+import urllib.parse, urllib.request, urllib.parse, urllib.error
 from dateutil.tz import tzlocal
 
 class NotFound(ValueError):
@@ -47,8 +47,8 @@ class Links(object):
             out['displayDescription'] = out['description']
 
         out['tagWords'] = [{'word' : w} for w in out['tag'].split(None)]
-        out['domain'] = urlparse.urlparse(out['href']).netloc
-        out['editLink'] = 'addLink?' + urllib.urlencode([('url', out['href'])])
+        out['domain'] = urllib.parse.urlparse(out['href']).netloc
+        out['editLink'] = 'addLink?' + urllib.parse.urlencode([('url', out['href'])])
         out['shareWith'] = [{'label' : uri} for uri in doc.get('shareWith', [])]
         return out
 
@@ -61,7 +61,7 @@ class Links(object):
             extended=data.extended,
             href=data.href,
             private=data.private,
-            shareWith=filter(None, data.shareWith.split(',')),
+            shareWith=[_f for _f in data.shareWith.split(',') if _f],
             tag=data.tag,
             t=t,
         )

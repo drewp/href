@@ -35,7 +35,7 @@ class PageTitle(object):
         if doc is None:
             try:
                 title = self.getPageTitleNow(uri)
-            except CantGetTitle, e:
+            except CantGetTitle as e:
                 return str(e)
             doc = {'_id': uri, 'title' : title,
                    'getTime':datetime.datetime.now(tzlocal())}

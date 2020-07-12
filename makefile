@@ -1,7 +1,4 @@
-all: bin/python static/lib/jquery-1.9.1.min.js static/lib/knockout-2.2.1.js static/lib/select2 static/lib/async-2013-03-17.js static/lib/jquery.rdfquery.rdfa.min-1.0.js static/lib/RDFa.min.0.21.0.js
-
-bin/python:
-	bin/pip install -r pydeps
+all: static/lib/jquery-1.9.1.min.js static/lib/knockout-2.2.1.js static/lib/select2 static/lib/async-2013-03-17.js static/lib/jquery.rdfquery.rdfa.min-1.0.js static/lib/RDFa.min.0.21.0.js
 
 static/lib/jquery-1.9.1.min.js:
 	curl -o $@ http://code.jquery.com/jquery-1.9.1.min.js

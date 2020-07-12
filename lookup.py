@@ -8,27 +8,27 @@ serve some queries over bookmarks:
 and the add-bookmark stuff
 
 """
-import pymongo, bottle, time, urllib, datetime, json, restkit, logging
+import pymongo, bottle, time, urllib.request, urllib.parse, urllib.error, datetime, json, logging
+import requests
 from collections import defaultdict
-from urllib2 import urlparse
+from urllib.parse import urlparse
 from dateutil.tz import tzlocal
 from bottle import static_file
 from jadestache import Renderer
 from pagetitle import PageTitle
 from link import Links, NotFound
-db = pymongo.Connection('bang', tz_aware=True)['href']
+db = pymongo.Connection('mongodb.default.svc.cluster.local', tz_aware=True)['href']
 pageTitle = PageTitle(db)
 links = Links(db)
 renderer = Renderer(search_dirs=['template'], debug=bottle.DEBUG)
 log = logging.getLogger()
 
 def getLoginBar():
-    openidProxy = restkit.Resource("http://bang:9023/")
-    return openidProxy.get("_loginBar",
+    return requests.get("http://openid-proxy.default.svc.cluster.local:9023/_loginBar",
                            headers={
                                "Cookie" : bottle.request.headers.get('cookie'),
                                'x-site': 'http://bigasterisk.com/openidProxySite/href',
-                           }).body_string()
+                           }).text
 
 def getUser():
     agent = bottle.request.headers.get('x-foaf-agent', None)
@@ -70,8 +70,8 @@ def allTags(user, withTags=[]):
             continue
         for t in docTags.difference(withTags):
             count[t] = count[t] + 1
-    byFreq = [(n, t) for t,n in count.iteritems()]
-    byFreq.sort(key=lambda (n,t): (-n, t))
+    byFreq = [(n, t) for t,n in count.items()]
+    byFreq.sort(key=lambda n_t: (-n_t[0], n_t[1]))
     return [{'label': t, 'count': n} for n, t in byFreq]
     
 def renderWithTime(name, data):
@@ -126,7 +126,7 @@ if 0:
 @bottle.route('/tags')
 def tagFilterComplete():
     params = bottle.request.params
-    haveTags = filter(None, params['have'].split(','))
+    haveTags = [_f for _f in params['have'].split(',') if _f]
     if haveTags and len(haveTags[-1]) > 0:
         haveTags, partialTerm = haveTags[:-1], haveTags[-1]
     else:
@@ -145,7 +145,7 @@ def tagFilterComplete():
     
 @bottle.route('/<user>/')
 def userSlash(user):
-    bottle.redirect(siteRoot() + "/%s" % urllib.quote(user))
+    bottle.redirect(siteRoot() + "/%s" % urllib.parse.quote(user))
 
 @bottle.route('/<user>.json', method='GET')
 def userAllJson(user):
@@ -162,19 +162,19 @@ def userAll(user):
 def userAddLink(user):
     if getUser()[0] != user:
         raise ValueError("not logged in as %s" % user)
-    print repr(bottle.request.params.__dict__)
+    print(repr(bottle.request.params.__dict__))
     doc = links.fromPostdata(bottle.request.params,
                              user,
                              datetime.datetime.now(tzlocal()))
     links.insertOrUpdate(doc)
 
-    print "notify about sharing to", repr(doc['shareWith'])
+    print("notify about sharing to", repr(doc['shareWith']))
         
     bottle.redirect(siteRoot() + '/' + user)
 
 def parseTags(tagComponent):
     # the %20 is coming from davis.js, not me :(
-    return filter(None, tagComponent.replace("%20", "+").split('+'))
+    return [_f for _f in tagComponent.replace("%20", "+").split('+') if _f]
     
 @bottle.route('/<user>/<tags:re:.*>.json')
 def userLinksJson(user, tags):
