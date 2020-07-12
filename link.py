@@ -1,18 +1,23 @@
-import urllib.parse, urllib.request, urllib.parse, urllib.error
+import urllib.parse
+import urllib.request
+import urllib.parse
+import urllib.error
 from dateutil.tz import tzlocal
+
 
 class NotFound(ValueError):
     pass
 
+
 class Links(object):
     def __init__(self, db):
         self.coll = db['links']
-        
+
     def insertOrUpdate(self, doc):
         if not doc['href']:
             raise ValueError("no link")
         self.extract(doc)
-        self.coll.update({'href':doc['href']}, doc, upsert=True, safe=True)
+        self.coll.update({'href': doc['href']}, doc, upsert=True, safe=True)
 
     def extract(self, doc):
         forUsers = []
@@ -25,7 +30,7 @@ class Links(object):
         doc['extracted'] = dict(tags=tags, forUsers=forUsers)
 
     def find(self, uri, user):
-        docs = list(self.coll.find({'href': uri, 'user' : user}))
+        docs = list(self.coll.find({'href': uri, 'user': user}))
         if len(docs) == 0:
             raise NotFound("not found")
         elif len(docs) > 1:
@@ -34,8 +39,8 @@ class Links(object):
             return docs[0]
 
     def filter(self, user, startTime):
-        return self.coll.find({'user' : user, 't': {'$gte': startTime}})
-            
+        return self.coll.find({'user': user, 't': {'$gte': startTime}})
+
     def forDisplay(self, doc):
         """return a mustache-ready dict for this db doc"""
         out = doc.copy()
@@ -46,10 +51,11 @@ class Links(object):
         else:
             out['displayDescription'] = out['description']
 
-        out['tagWords'] = [{'word' : w} for w in out['tag'].split(None)]
+        out['tagWords'] = [{'word': w} for w in out['tag'].split(None)]
         out['domain'] = urllib.parse.urlparse(out['href']).netloc
-        out['editLink'] = 'addLink?' + urllib.parse.urlencode([('url', out['href'])])
-        out['shareWith'] = [{'label' : uri} for uri in doc.get('shareWith', [])]
+        out['editLink'] = 'addLink?' + urllib.parse.urlencode(
+            [('url', out['href'])])
+        out['shareWith'] = [{'label': uri} for uri in doc.get('shareWith', [])]
         return out
 
     def fromPostdata(self, data, user, t):
@@ -67,10 +73,11 @@ class Links(object):
         )
 
     def asDeliciousAddParams(self):
-        return dict(url=self['href'],
-                    description=self['description'],
-                    extended=self['extended'],
-                    tags=','.join(self['tag'].split(' ')),
-                    dt=self['t'],
-                    replace='yes',
+        return dict(
+            url=self['href'],
+            description=self['description'],
+            extended=self['extended'],
+            tags=','.join(self['tag'].split(' ')),
+            dt=self['t'],
+            replace='yes',
         )
