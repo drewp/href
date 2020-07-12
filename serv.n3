@@ -1,0 +1,18 @@
+@prefix : <http://bigasterisk.com/ns/serv#> .
+@prefix auth: <http://bigasterisk.com/ns/serv/auth#> .
+@prefix serv: <http://bigasterisk.com/services/> .
+
+
+serv:href_image a :DockerImage;
+  :internalPort 10002;
+  :dockerFile "Dockerfile"
+.
+
+serv:href a :Service;
+  :image serv:href_image;
+  :path "/href/";
+  :openid auth:admin;
+  :serverHost "bang";
+  :port 10002
+.
+
