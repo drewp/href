@@ -10,5 +10,5 @@ pystache==0.5.3
 python-dateutil
 six
 pyjade==4.0.0
-lxml==4.5.2
+lxml==4.6.3
 requests==2.24.0
